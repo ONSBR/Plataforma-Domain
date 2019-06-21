@@ -51,7 +51,11 @@ module.exports = class DockerService{
           labels += ` --label process_id=${env.conf.app.id}`
           var externalPort = "8087";
           var portExternal = ""
-          var _e = "";
+          // Adding Database enviroment variables from "plataforma.json"
+          var _e = ` -e DB_NAME=${env.conf.dbconfig.db_name}`
+          _e += ` -e POSTGRES_HOST=${env.conf.dbconfig.postgres_host}`
+          _e += ` -e POSTGRES_USER=${env.conf.dbconfig.postgres_user}`
+          _e += ` -e POSTGRES_PASSWORD=${env.conf.dbconfig.postgres_password}`
           if(env.variables){
             Object.keys(env.variables).forEach(k => {
               _e = `${_e} -e ${k}=${env.variables[k]}`;

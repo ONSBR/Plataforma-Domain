@@ -1,6 +1,6 @@
 from sqlalchemy import event, orm
 from psycopg2 import extras as pg_extras
-
+from uuid import uuid4
 from core.temporal.orm import TemporalQuery
 from core.temporal.listeners import before_flush
 from core.temporal.utils import effective_now
@@ -20,6 +20,16 @@ class TemporalSession(orm.session.Session):
         clock.ticks = 0
         #  self.add(clock)
         return clock
+    
+    def create_clock_bulk(self, entity, period=effective_now()):
+        """creates a new clock for a temporal model.
+        """
+        clock = entity._clock()
+        clock.rid = uuid4()
+        clock.effective = period
+        clock.entity_id = entity.rid
+        clock.ticks = 0
+        return clock, True
 
     def get_or_create_clock(self, entity, period=effective_now()):
         """gets an existing or creates a new entity clock
@@ -43,6 +53,17 @@ class TemporalSession(orm.session.Session):
         history.value = value
         #  self.add(history)
         return history
+
+    def create_field_history_bulk(self, entity, field, clock, value):
+        """creates a new entity field history.
+        """
+        history = entity._history[field]()
+        history.rid = uuid4()
+        history.entity_id = entity.rid
+        history.clock_id = clock.rid
+        history.ticks = pg_extras.NumericRange(clock.ticks+1)
+        history.value = getattr(entity, field)
+        return history, True
 
     def get_or_create_field_history(self, entity, field, clock):
         """gets an existing or creates a new entity history field

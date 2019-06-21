@@ -13,8 +13,8 @@ class SETTINGS:
     DB_HOST = "127.0.0.1"
     DB_PORT = 5432
     DB_NAME = "app_name"
-    DB_USER = "postgres"
-    DB_PASSWORD = ""
+    DB_USER = "test_user"
+    DB_PASSWORD = "passwd"
     KEEP_DB = True
 
 
@@ -23,7 +23,7 @@ def engine(request):
     """Creates a new database connection for each test section.
     """
     engine = create_engine(
-        f'postgresql+psycopg2://{SETTINGS.DB_USER}@{SETTINGS.DB_HOST}:{SETTINGS.DB_PORT}/{SETTINGS.DB_NAME}',
+        f'postgresql+psycopg2://{SETTINGS.DB_USER}:{SETTINGS.DB_PASSWORD}@{SETTINGS.DB_HOST}:{SETTINGS.DB_PORT}/{SETTINGS.DB_NAME}',
         echo=False)
 
     if not database_exists(engine.url):
@@ -62,7 +62,7 @@ def session(db, engine, request):
     return session
 
 
-def pytest_namespace():
+def pytest_configure():
     """
     """
     class ModelBase:
@@ -75,9 +75,12 @@ def pytest_namespace():
             primary_key=True,
             default=uuid4)
 
-    return {
-        'BaseModel': declarative_base(cls=ModelBase)
-    }
+    # return {
+    #     'BaseModel': declarative_base(cls=ModelBase)
+    # }
+
+    pytest.BaseModel = declarative_base(cls=ModelBase)
+
 
 
 @pytest.fixture

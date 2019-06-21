@@ -1,6 +1,8 @@
+import time
 import json
 
 import pytest
+import docker
 from sqlalchemy import create_engine, orm
 from sqlalchemy_utils import database_exists, create_database, drop_database
 
@@ -13,18 +15,41 @@ from app import create_app
 class SETTINGS:
     DB_HOST = "127.0.0.1"
     DB_PORT = 5432
-    DB_NAME = "app_name"
-    DB_USER = "postgres"
-    DB_PASSWORD = ""
+    DB_NAME = "test_domain"
+    DB_USER = "test_user"
+    DB_PASSWORD = "passwd"
     KEEP_DB = False
 
+def load_db_container():
+    container_name = 'postgres_domain_test_db'
+    client = docker.from_env()
+    containers = client.containers.list(filters={'name': container_name})
+
+    if containers:
+        return containers[0]
+
+    container = client.containers.run(
+        'postgres',
+        name=container_name,
+        auto_remove=True,
+        detach=True,
+        ports={'5432/tcp': '5432'},
+        environment=[f'POSTGRES_USER={SETTINGS.DB_USER}', f'POSTGRES_PASSWORD={SETTINGS.DB_PASSWORD}'],
+    )
+
+    # waiting for the container to be up and set.
+    time.sleep(3)
+    return container
 
 @pytest.fixture(scope='session')
 def engine(request):
     """Creates a new database connection for each test section.
     """
+    container = load_db_container()
+
+
     engine = create_engine(
-        f'postgresql+psycopg2://{SETTINGS.DB_USER}@{SETTINGS.DB_HOST}:{SETTINGS.DB_PORT}/{SETTINGS.DB_NAME}',
+        f'postgresql+psycopg2://{SETTINGS.DB_USER}:{SETTINGS.DB_PASSWORD}@{SETTINGS.DB_HOST}:{SETTINGS.DB_PORT}/{SETTINGS.DB_NAME}',
         echo=False)
 
     if not database_exists(engine.url):
@@ -32,7 +57,7 @@ def engine(request):
 
     def teardown():
         if not SETTINGS.KEEP_DB:
-            drop_database(engine.url)
+            container.stop()
 
     request.addfinalizer(teardown)
     return engine

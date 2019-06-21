@@ -89,7 +89,7 @@ def insert_bulk_map(app_id):
     body = json.loads(request.data)
     controller = CommandController(app_id, body, instance_id, reference_date, process_id)
     try:
-    return jsonify(controller.persist_bulk())
+        return jsonify(controller.persist_bulk())
     except Exception as excpt:
         r = {"status_code": 400, "message": str(excpt)}
         return jsonify(r), 400

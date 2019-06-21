@@ -78,19 +78,15 @@ class Persistence(Component):
         result += list(self.recover(to_recover,scope))
         self.destroy(to_destroy,scope)
         return result
-    
+		
     def persist_bulk(self, objs,scope):
         self.link_branch(objs)
         to_create = []
         for o in objs:
-            if not self.is_valid_changed_obj(o):
-                continue
-            if self.is_to_create(o):
-                to_create.append(o)
+            to_create.append(o)
         result = list(self.build_instance_bulk_create(to_create))
-        self.session.bulk_save_objects(result)
         return result
-
+		  
     def create(self, objs):
         for o in objs:
             _type = o["_metadata"]["type"].lower()
@@ -104,13 +100,10 @@ class Persistence(Component):
             instance.rid = rid
             self.session.add(instance)
             yield instance
-    
+
     def build_instance_bulk_create(self, objs):
         for o in objs:
             _type = o["_metadata"]["type"].lower()
-            #rid = o["_metadata"].get("rid",None)
-            #if not rid:
-            #    log.info("rid not pass will be created a new one")
             rid = uuid4()
             instance = globals()[_type](**o)
             instance.modified = datetime.utcnow()
