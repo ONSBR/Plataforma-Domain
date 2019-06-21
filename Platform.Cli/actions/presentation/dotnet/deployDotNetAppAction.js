@@ -73,7 +73,7 @@ module.exports = class DeployProcessAppAction extends BaseDeployAction {
 
                 if (fs.existsSync(`${source}/View`)) {
                     shell.cd("View");
-                    shell.exec(`ng build --base-href /${dockerName}/ --deploy-url /${dockerName}/`);
+                    shell.exec(`ng build --configuration=production --base-href /${dockerName}/ --deploy-url /${dockerName}/`);
                     shell.cd("..");
                 }
                 
