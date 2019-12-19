@@ -13,7 +13,7 @@
     "commander": "^2.12.2",
     "handlebars": "^4.0.11",
     "inquirer": "^4.0.2",
-    "js-yaml": "^3.10.0",
+    "js-yaml": "^3.13.1",
     "ncp": "^2.0.0",
     "pg": "^7.4.0",
     "pg-hstore": "^2.3.2",
